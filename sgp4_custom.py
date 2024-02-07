@@ -88,7 +88,9 @@ class SGP4SAT:
         jd  = self.jd + time_days
         mjd = jd - JULIAN_FIX
         elements       = cart2kep(states[-1,:], deg=False)
-        self.satellite = SGP4SAT(elements, MJD=mjd, deg=False).satellite
+        sat = SGP4SAT(elements, MJD=mjd, deg=False)
+        self.satellite = sat.satellite
+        self.jd        = sat.jd
 
         return states
 
