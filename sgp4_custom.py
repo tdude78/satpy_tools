@@ -68,35 +68,40 @@ class SGP4SAT:
 
 
 
-    def _propagate(self, time:float):
-        e, r, v = self.satellite.sgp4(time, 0)
+    def propagate_to(self, time_days:float):
+        time_days += self.satellite.jdsatepoch + self.satellite.jdsatepochF
+        e, r, v = self.satellite.sgp4(time_days, 0)
         if e != 0:
             raise RuntimeError(SGP4_ERRORS[e])
         state = np.concatenate((r, v))
         return state
     
 
-    def propagate(self, time_days:float, timestep_s:float):
+    def propagate_step(self, time_days:float, timestep_s:float):
         timestep_days = timestep_s/86400
         ts            = np.arange(0, time_days+timestep_days, timestep_days)
         states        = np.zeros((len(ts), 7))
         mjd           = self.jd - JULIAN_FIX
         for i, t in enumerate(ts):
             try:
-                state = self._propagate(t)
+                state = self.propagate_to(t)
             except RuntimeError as e:
                 print(e)
                 states = states[:i,:]
                 break
             t = np.array([mjd + t])
             states[i,:] = np.concatenate((t, state))
+        return states
+    
+
+    def propagate_step_update(self, time_days:float, timestep_s:float):
+        states = self.propagate_step(time_days, timestep_s)
 
         mjd_f          = self.jd + time_days - JULIAN_FIX
         elements       = cart2kep(states[-1,:], deg=False)
         sat            = SGP4SAT(elements, MJD=mjd_f, deg=False)
         self.satellite = sat.satellite
         self.jd        = sat.jd
-
         return states
 
 
@@ -111,7 +116,7 @@ if __name__ == "__main__":
     sat = SGP4SAT(elements)
 
     start = timeit.default_timer()
-    states = sat.propagate(days_prop, 1)
+    states = sat.propagate_step(days_prop, 1)
     end = timeit.default_timer()
     print("Time: ", end-start, " seconds")
 
