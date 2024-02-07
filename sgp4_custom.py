@@ -5,6 +5,10 @@ from scipy.special import jv
 from sgp4 import exporter
 from sgp4.api import SGP4_ERRORS, WGS72, Satrec
 
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 from constants import MU, RE, NOW_MJD, SGP4_JDOFFSET, JULIAN_FIX
 from conversions import cart2kep, kep2cart
 
