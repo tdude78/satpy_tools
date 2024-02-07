@@ -60,10 +60,12 @@ class SGP4SAT:
 
         self.satellite = Satrec()
 
-        jd_sgp4 = MJD + JULIAN_FIX - SGP4_JDOFFSET
+        self.jd = MJD + JULIAN_FIX
+        jd_sgp4 = self.jd - SGP4_JDOFFSET
         self.satellite.sgp4init(
             WGS72, 'i', 1, jd_sgp4, B_star, 0, 0, *elements
         )
+
 
 
     def _propagate(self, time:float):
@@ -83,8 +85,10 @@ class SGP4SAT:
             state = self._propagate(t)
             states[i,:] = state
 
-        elements = cart2kep(states[-1,:])
-        self.satellite = SGP4SAT(elements).satellite
+        jd  = self.jd + time_days
+        mjd = jd - JULIAN_FIX
+        elements       = cart2kep(states[-1,:], deg=False)
+        self.satellite = SGP4SAT(elements, MJD=mjd, deg=False).satellite
 
         return states
 
