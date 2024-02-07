@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.special import jv
-from constants import MU
+from constants import MU, JULIAN_FIX
 import juliandate
 
 # 02/07/24

@@ -6,7 +6,7 @@ from sgp4 import exporter
 from sgp4.api import SGP4_ERRORS, WGS72, Satrec
 
 from constants import MU, RE, NOW_MJD, SGP4_JDOFFSET, JULIAN_FIX
-from conversions2 import cart2kep, kep2cart
+from conversions import cart2kep, kep2cart
 
 # 02/07/24
 

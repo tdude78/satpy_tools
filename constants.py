@@ -28,10 +28,13 @@ try:
 except RaySystemError:
 	MEMORY, CPUS, MEM_PER_WORKER = get_mem_func()
 
+# Earth shape parameters
 MU    = (3.986004418e14)/(1e3)**3
 RE    = 6371.000
 RE_po = 6356.752
 RE_eq = 6378.137
+g  = lambda h: MU/(RE + h)**2
+
 
 MIN_V = np.sqrt(MU/(RE+250))
 MAX_V = np.sqrt(MU/(35786))
@@ -43,3 +46,10 @@ now_year, now_month, now_day = right_now.year, right_now.month, right_now.day
 now_hr, now_min, now_sec  = right_now.hour, right_now.minute, right_now.second
 NOW_MJD    = juliandate.from_gregorian(now_year,now_month,now_day,now_hr,now_min,now_sec) - JULIAN_FIX
 
+MIN_PER_DAY   = 1440
+SEC_PER_DAY   = 60 * MIN_PER_DAY
+
+# Earth atmospheric & Chemistry Parameters
+n0 = 1.00027717
+R  = 287 # J/kg/K
+p0 = 101325 # Pa
