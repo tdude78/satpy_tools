@@ -104,3 +104,37 @@ def kep2cart(state, deg=True):
     return state
 
 
+
+def parse_TLE(line1, line2):
+    line1 = line1.split()
+    line2 = line2.split()
+
+    # line 1
+    sat_num = str(line1[1])
+    # classification = str(line1[2])
+    int_desig = line1[2]
+    time = line1[3].split('.')
+    epoch_year = int(time[0][0:2])
+    if epoch_year > 56:
+        epoch_year = epoch_year + 1900
+    else:
+        epoch_year = epoch_year + 2000
+
+    epoch_day_int = float(time[0][2:])
+    epoch_dayfrac = int(time[1])
+    epoch_day = float(str(epoch_day_int) + str(epoch_dayfrac))
+    MJD = juliandate.from_gregorian(epoch_year, 1, epoch_day) - JULIAN_FIX
+
+    INC = float(line2[2])
+    RAAN = float(line2[3])
+    ECC = float("0." + line2[4])
+    AOP = float(line2[5])
+    MA = float(line2[6])
+    MM = float(line2[7])
+
+    SMA = (MU/(2*np.pi*MM/(24*3600))**2)**(1/3)
+
+    result = MJD, np.array([SMA, ECC, INC, RAAN, AOP, MA], dtype=np.float64)
+
+    return result
+
