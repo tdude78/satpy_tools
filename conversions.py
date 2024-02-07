@@ -14,6 +14,10 @@ from satpy_tools.constants import JULIAN_FIX, MU
 def cart2kep(state, deg=True):
     # https://web.archive.org/web/20160418175843/https://ccar.colorado.edu/asen5070/handouts/cart2kep2002.pdf
     # https://space.stackexchange.com/questions/19322/converting-orbital-elements-to-cartesian-state-vectors
+
+    if len(state) == 7:
+        state = state[1:]
+
     mu    = MU
     r_vec = state[0:3]
     v_vec = state[3:6]
@@ -63,6 +67,9 @@ def cart2kep(state, deg=True):
 def kep2cart(state, deg=True):
     # https://web.archive.org/web/20160418175843/https://ccar.colorado.edu/asen5070/handouts/cart2kep2002.pdf
     # https://space.stackexchange.com/questions/19322/converting-orbital-elements-to-cartesian-state-vectors
+    if len(state) == 7:
+        state = state[1:]
+    
     mu = MU
 
     try:

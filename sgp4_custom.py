@@ -78,17 +78,22 @@ class SGP4SAT:
 
     def propagate(self, time_days:float, timestep_s:float):
         timestep_days = timestep_s/86400
-        ts            = np.arange(0, time_days, timestep_days)
-        states        = np.zeros((len(ts), 6))
-
+        ts            = np.arange(0, time_days+timestep_days, timestep_days)
+        states        = np.zeros((len(ts), 7))
+        mjd           = self.jd - JULIAN_FIX
         for i, t in enumerate(ts):
-            state = self._propagate(t)
-            states[i,:] = state
+            try:
+                state = self._propagate(t)
+            except RuntimeError as e:
+                print(e)
+                states = states[:i,:]
+                break
+            t = np.array([mjd + t])
+            states[i,:] = np.concatenate((t, state))
 
-        jd  = self.jd + time_days
-        mjd = jd - JULIAN_FIX
+        mjd_f          = self.jd + time_days - JULIAN_FIX
         elements       = cart2kep(states[-1,:], deg=False)
-        sat = SGP4SAT(elements, MJD=mjd, deg=False)
+        sat            = SGP4SAT(elements, MJD=mjd_f, deg=False)
         self.satellite = sat.satellite
         self.jd        = sat.jd
 
