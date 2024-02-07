@@ -4,7 +4,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 import numpy as np
 from scipy.special import jv
-from constants import MU, JULIAN_FIX
+from satpy_tools.constants import MU, JULIAN_FIX
 import juliandate
 
 # 02/07/24

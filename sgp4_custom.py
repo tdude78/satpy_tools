@@ -9,8 +9,8 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from constants import MU, RE, NOW_MJD, SGP4_JDOFFSET, JULIAN_FIX
-from conversions import cart2kep, kep2cart
+from satpy_tools.constants import MU, RE, NOW_MJD, SGP4_JDOFFSET, JULIAN_FIX
+from satpy_tools.conversions import cart2kep, kep2cart
 
 # 02/07/24
 
