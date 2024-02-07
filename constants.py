@@ -1,8 +1,9 @@
+from datetime import datetime
+
+import juliandate
 import numpy as np
 import ray
 from ray.exceptions import RaySystemError
-from datetime import datetime
-import juliandate
 
 if not ray.is_initialized():
 	ray.init()

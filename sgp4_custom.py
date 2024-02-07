@@ -1,3 +1,6 @@
+import os
+import sys
+
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.constants import G, M_earth, R_earth
@@ -5,11 +8,9 @@ from scipy.special import jv
 from sgp4 import exporter
 from sgp4.api import SGP4_ERRORS, WGS72, Satrec
 
-import sys
-import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from satpy_tools.constants import MU, RE, NOW_MJD, SGP4_JDOFFSET, JULIAN_FIX
+from satpy_tools.constants import JULIAN_FIX, MU, NOW_MJD, RE, SGP4_JDOFFSET
 from satpy_tools.conversions import cart2kep, kep2cart
 
 # 02/07/24

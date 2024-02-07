@@ -7,7 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
 from scipy.interpolate import PchipInterpolator
 
-from standard_atm import T_1976_K, h_1976_km, rhos_1976
+from satpy_tools.standard_atm import T_1976_K, h_1976_km, rhos_1976
 
 rho_vals_interp = PchipInterpolator(h_1976_km, np.log(rhos_1976), extrapolate=False)
 Ts_interp       = PchipInterpolator(h_1976_km, T_1976_K, extrapolate=False)
