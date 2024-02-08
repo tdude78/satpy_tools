@@ -110,6 +110,95 @@ def cart2kep(state, deg=True):
 
     return elems
 
+
+def kep2cart(state, deg=True):
+    a, e, i, raan, arg_pe, M = state
+    if deg:
+        i     = np.deg2rad(i)
+        raan  = np.deg2rad(raan)
+        arg_pe = np.deg2rad(arg_pe)
+        M     = np.deg2rad(M)
+
+    mu    = MU
+    omega = arg_pe
+    Omega = raan
+
+    E = M
+    E_prev = 0
+    for n in range(100):
+        if n == 0:
+            continue
+        
+        # E += jv(n, n*e)*np.sin(n*M)
+        E -= (E - e*np.sin(E) - M)/(1 - e*np.cos(E))
+        if np.abs(E - E_prev) < 1e-12:
+            break
+        E_prev = E
+
+    nu = 2 * atan2(sqrt(1 + e) * sin(E / 2), sqrt(1 - e) * cos(E / 2))
+
+    rc = a*(1 - e*np.cos(E))
+
+    ox = rc*np.cos(nu)
+    oy = rc*np.sin(nu)
+
+    ox_dot = (np.sqrt(mu*a)/rc)*(-np.sin(E))
+    oy_dot = (np.sqrt(mu*a)/rc)*(np.sqrt(1-e**2)*np.cos(E))
+
+    r1 = ox*(np.cos(omega)*np.cos(Omega) - np.sin(omega)*np.sin(Omega)*np.cos(i)) - oy*(np.sin(omega)*np.cos(Omega) + np.cos(omega)*np.sin(Omega)*np.cos(i))
+    r2 = ox*(np.cos(omega)*np.sin(Omega) + np.sin(omega)*np.cos(Omega)*np.cos(i)) - oy*(np.sin(omega)*np.sin(Omega) - np.cos(omega)*np.cos(Omega)*np.cos(i))
+    r3 = ox*(np.sin(omega)*np.sin(i)) + oy*(np.cos(omega)*np.sin(i))
+
+    v1 = ox_dot*(np.cos(omega)*np.cos(Omega) - np.sin(omega)*np.sin(Omega)*np.cos(i)) - oy_dot*(np.sin(omega)*np.cos(Omega) + np.cos(omega)*np.sin(Omega)*np.cos(i))
+    v2 = ox_dot*(np.cos(omega)*np.sin(Omega) + np.sin(omega)*np.cos(Omega)*np.cos(i)) - oy_dot*(np.sin(omega)*np.sin(Omega) - np.cos(omega)*np.cos(Omega)*np.cos(i))
+    v3 = ox_dot*(np.sin(omega)*np.sin(i)) + oy_dot*(np.cos(omega)*np.sin(i))
+
+    state = np.array([r1, r2, r3, v1, v2, v3], dtype=np.float64)
+    return state
+
+
+def parse_TLE(line1, line2, deg=True):
+    line1 = line1.split()
+    line2 = line2.split()
+
+    # line 1
+    sat_num = str(line1[1])
+    # classification = str(line1[2])
+    int_desig = line1[2]
+    time = line1[3].split('.')
+    epoch_year = int(time[0][0:2])
+    if epoch_year > 56:
+        epoch_year = epoch_year + 1900
+    else:
+        epoch_year = epoch_year + 2000
+
+    epoch_day_int = float(time[0][2:])
+    epoch_dayfrac = int(time[1])
+    epoch_day = float(str(epoch_day_int) + str(epoch_dayfrac))
+    MJD = juliandate.from_gregorian(epoch_year, 1, epoch_day) - JULIAN_FIX
+
+    INC = float(line2[2])
+    RAAN = float(line2[3])
+    ECC = float("0." + line2[4])
+    AOP = float(line2[5])
+    MA = float(line2[6])
+    MM = float(line2[7])
+
+    SMA = (MU/(2*np.pi*MM/(24*3600))**2)**(1/3)
+
+    if not deg:
+        INC = np.deg2rad(INC)
+        RAAN = np.deg2rad(RAAN)
+        AOP = np.deg2rad(AOP)
+        MA = np.deg2rad(MA)
+
+    result = MJD, np.array([SMA, ECC, INC, RAAN, AOP, MA], dtype=np.float64)
+
+    return result
+
+
+
+
 def cart2kep_test(state, deg=True):
     # https://space.stackexchange.com/questions/1904/how-to-programmatically-calculate-orbital-elements-using-position-velocity-vecto
     eps  = 1e-10
@@ -150,7 +239,6 @@ def cart2kep_test(state, deg=True):
 
     if np.dot(r,v)<0:
         nu = 360 - nu
-
 def cart2kep_dep(state, deg=True):
     # https://web.archive.org/web/20160418175843/https://ccar.colorado.edu/asen5070/handouts/cart2kep2002.pdf
     # https://space.stackexchange.com/questions/19322/converting-orbital-elements-to-cartesian-state-vectors
@@ -210,8 +298,6 @@ def cart2kep_dep(state, deg=True):
         M     = np.mod(M, 2*np.pi)
     state = np.array([a,e,i,omega,RAAN,M], dtype=np.float64)
     return state
-
-
 def kep2cart_dep(state, deg=True):
     # https://web.archive.org/web/20160418175843/https://ccar.colorado.edu/asen5070/handouts/cart2kep2002.pdf
     # https://space.stackexchange.com/questions/19322/converting-orbital-elements-to-cartesian-state-vectors
@@ -264,45 +350,3 @@ def kep2cart_dep(state, deg=True):
 
     state = np.array([X,Y,Z,V_X,V_Y,V_Z], dtype=np.float64)
     return state
-
-
-
-def parse_TLE(line1, line2, deg=True):
-    line1 = line1.split()
-    line2 = line2.split()
-
-    # line 1
-    sat_num = str(line1[1])
-    # classification = str(line1[2])
-    int_desig = line1[2]
-    time = line1[3].split('.')
-    epoch_year = int(time[0][0:2])
-    if epoch_year > 56:
-        epoch_year = epoch_year + 1900
-    else:
-        epoch_year = epoch_year + 2000
-
-    epoch_day_int = float(time[0][2:])
-    epoch_dayfrac = int(time[1])
-    epoch_day = float(str(epoch_day_int) + str(epoch_dayfrac))
-    MJD = juliandate.from_gregorian(epoch_year, 1, epoch_day) - JULIAN_FIX
-
-    INC = float(line2[2])
-    RAAN = float(line2[3])
-    ECC = float("0." + line2[4])
-    AOP = float(line2[5])
-    MA = float(line2[6])
-    MM = float(line2[7])
-
-    SMA = (MU/(2*np.pi*MM/(24*3600))**2)**(1/3)
-
-    if not deg:
-        INC = np.deg2rad(INC)
-        RAAN = np.deg2rad(RAAN)
-        AOP = np.deg2rad(AOP)
-        MA = np.deg2rad(MA)
-
-    result = MJD, np.array([SMA, ECC, INC, RAAN, AOP, MA], dtype=np.float64)
-
-    return result
-
