@@ -13,10 +13,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from satpy_tools.constants import JULIAN_FIX, MU, NOW_MJD, RE, SGP4_JDOFFSET
 from satpy_tools.conversions import cart2kep
 
-# 02/07/24
 
 class SGP4SAT:
-    def __init__(self, elements:np.ndarray, MJD=NOW_MJD, deg=True):
+    def __init__(self, elements, MJD=None, deg=True):
         '''
         >>> satellite2 = Satrec()
         >>> satellite2.sgp4init(
@@ -36,36 +35,45 @@ class SGP4SAT:
         ... )
         '''
 
-        # convert elements [a, e, i, raan, argp, M] to [ecco, argpo, inclo, mo, no_kozai, nodeo]
-        ecco  = elements[1]
-        argpo = elements[4]
-        inclo = elements[2]
-        mo    = elements[5]
-        no_kozai = np.sqrt(MU/elements[0]**3)*60
-        nodeo = elements[3]
-        
-        try:
-            B_star = elements[6]
-        except IndexError:
-            B_star = 0
+        if isinstance(elements, np.ndarray):
+            # convert elements [a, e, i, raan, argp, M] to [ecco, argpo, inclo, mo, no_kozai, nodeo]
+            ecco  = elements[1]
+            argpo = elements[4]
+            inclo = elements[2]
+            mo    = elements[5]
+            no_kozai = np.sqrt(MU/elements[0]**3)*60
+            nodeo = elements[3]
+            
+            try:
+                B_star = elements[6]
+            except IndexError:
+                B_star = 0
 
-        elems    = np.array([ecco, argpo, inclo, mo, no_kozai, nodeo])
-        elements = elems
-        if deg:
-            elements[1] = np.deg2rad(elements[1])
-            elements[2] = np.deg2rad(elements[2])
-            elements[3] = np.deg2rad(elements[3])
-            # elements[4] = np.deg2rad(elements[4])
-            elements[5] = np.deg2rad(elements[5])
+            elems    = np.array([ecco, argpo, inclo, mo, no_kozai, nodeo])
+            elements = elems
+            if deg:
+                elements[1] = np.deg2rad(elements[1])
+                elements[2] = np.deg2rad(elements[2])
+                elements[3] = np.deg2rad(elements[3])
+                # elements[4] = np.deg2rad(elements[4])
+                elements[5] = np.deg2rad(elements[5])
 
+            if MJD is None:
+                MJD = NOW_MJD
 
-        self.jd = MJD + JULIAN_FIX
-        jd_sgp4 = MJD + JULIAN_FIX - SGP4_JDOFFSET
+            self.jd = MJD + JULIAN_FIX
+            jd_sgp4 = MJD + JULIAN_FIX - SGP4_JDOFFSET
 
-        self.satellite = Satrec()
-        self.satellite.sgp4init(
-            WGS72, 'i', 1, jd_sgp4, B_star, 0, 0, *elements
-        )
+            self.satellite = Satrec()
+            self.satellite.sgp4init(
+                WGS72, 'i', 1, jd_sgp4, B_star, 0, 0, *elements
+            )
+        # check if is tuple of strings
+        elif isinstance(elements, tuple):
+            self.satellite = Satrec.twoline2rv(*elements)
+            self.jd  = self.satellite.jdsatepoch + self.satellite.jdsatepochF
+        else:
+            raise ValueError("Invalid input for elements. Must be a numpy array of orbital elements or a tuple of strings that are the TLE.")
 
 
 

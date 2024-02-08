@@ -20,7 +20,6 @@ from numpy import cos, dot, sin, sqrt
 from numpy.linalg import norm
 from scipy.constants import pi
 
-# 02/07/24
 
 def cart2kep(state, deg=True):
     # https://github.com/RazerM/orbital/blob/0.7.0/orbital/utilities.py#L252
