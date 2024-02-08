@@ -213,7 +213,7 @@ def cart2kep_dep(state, deg=True):
     return state
 
 
-def kep2cart(state, deg=True):
+def kep2cart_dep(state, deg=True):
     # https://web.archive.org/web/20160418175843/https://ccar.colorado.edu/asen5070/handouts/cart2kep2002.pdf
     # https://space.stackexchange.com/questions/19322/converting-orbital-elements-to-cartesian-state-vectors
     if len(state) == 7:
