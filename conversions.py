@@ -268,7 +268,7 @@ def kep2cart_dep(state, deg=True):
 
 
 
-def parse_TLE(line1, line2):
+def parse_TLE(line1, line2, deg=True):
     line1 = line1.split()
     line2 = line2.split()
 
@@ -296,6 +296,12 @@ def parse_TLE(line1, line2):
     MM = float(line2[7])
 
     SMA = (MU/(2*np.pi*MM/(24*3600))**2)**(1/3)
+
+    if not deg:
+        INC = np.deg2rad(INC)
+        RAAN = np.deg2rad(RAAN)
+        AOP = np.deg2rad(AOP)
+        MA = np.deg2rad(MA)
 
     result = MJD, np.array([SMA, ECC, INC, RAAN, AOP, MA], dtype=np.float64)
 
