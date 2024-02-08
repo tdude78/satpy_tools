@@ -11,7 +11,7 @@ from sgp4.api import SGP4_ERRORS, WGS72, Satrec
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from satpy_tools.constants import JULIAN_FIX, MU, NOW_MJD, RE, SGP4_JDOFFSET
-from satpy_tools.conversions import cart2kep, kep2cart
+from satpy_tools.conversions import cart2kep
 
 # 02/07/24
 
@@ -58,10 +58,11 @@ class SGP4SAT:
             # elements[4] = np.deg2rad(elements[4])
             elements[5] = np.deg2rad(elements[5])
 
-        self.satellite = Satrec()
 
         self.jd = MJD + JULIAN_FIX
-        jd_sgp4 = self.jd - SGP4_JDOFFSET
+        jd_sgp4 = MJD + JULIAN_FIX - SGP4_JDOFFSET
+
+        self.satellite = Satrec()
         self.satellite.sgp4init(
             WGS72, 'i', 1, jd_sgp4, B_star, 0, 0, *elements
         )
@@ -70,7 +71,7 @@ class SGP4SAT:
 
     def propagate_to(self, time_days:float):
         time_days += self.satellite.jdsatepoch + self.satellite.jdsatepochF
-        e, r, v = self.satellite.sgp4(time_days, 0)
+        e, r, v    = self.satellite.sgp4(time_days, 0)
         if e != 0:
             raise RuntimeError(SGP4_ERRORS[e])
         state = np.concatenate((r, v))

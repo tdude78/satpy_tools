@@ -9,9 +9,150 @@ from scipy.special import jv
 
 from satpy_tools.constants import JULIAN_FIX, MU
 
+from collections import namedtuple
+from contextlib import contextmanager
+from copy import deepcopy
+from math import atan2, floor, fmod, isinf, isnan
+
+import numpy as np
+from numpy import arccos as acos
+from numpy import cos, dot, sin, sqrt
+from numpy.linalg import norm
+from scipy.constants import pi
+
 # 02/07/24
 
 def cart2kep(state, deg=True):
+    # https://github.com/RazerM/orbital/blob/0.7.0/orbital/utilities.py#L252
+    mu    = MU
+
+    r = state[0:3]
+    v = state[3:6]
+
+    h = np.cross(r, v)
+    n = np.cross([0, 0, 1], h)
+
+    ev = 1 / mu * ((norm(v) ** 2 - mu / norm(r)) * r - dot(r, v) * v)
+
+    E = norm(v) ** 2 / 2 - mu / norm(r)
+
+    a = -mu / (2 * E)
+    e = norm(ev)
+
+    SMALL_NUMBER = 1e-15
+
+    # Inclination is the angle between the angular
+    # momentum vector and its z component.
+    i = acos(h[2] / norm(h))
+
+    if abs(i - 0) < SMALL_NUMBER:
+        # For non-inclined orbits, raan is undefined;
+        # set to zero by convention
+        raan = 0
+        if abs(e - 0) < SMALL_NUMBER:
+            # For circular orbits, place periapsis
+            # at ascending node by convention
+            arg_pe = 0
+        else:
+            # Argument of periapsis is the angle between
+            # eccentricity vector and its x component.
+            arg_pe = acos(ev[0] / norm(ev))
+    else:
+        # Right ascension of ascending node is the angle
+        # between the node vector and its x component.
+        raan = acos(n[0] / norm(n))
+        if n[1] < 0:
+            raan = 2 * pi - raan
+
+        # Argument of periapsis is angle between
+        # node and eccentricity vectors.
+        arg_pe = acos(dot(n, ev) / (norm(n) * norm(ev)))
+
+    if abs(e - 0) < SMALL_NUMBER:
+        if abs(i - 0) < SMALL_NUMBER:
+            # True anomaly is angle between position
+            # vector and its x component.
+            f = acos(r[0] / norm(r))
+            if v[0] > 0:
+                f = 2 * pi - f
+        else:
+            # True anomaly is angle between node
+            # vector and position vector.
+            f = acos(dot(n, r) / (norm(n) * norm(r)))
+            if dot(n, v) > 0:
+                f = 2 * pi - f
+    else:
+        if ev[2] < 0:
+            arg_pe = 2 * pi - arg_pe
+
+        # True anomaly is angle between eccentricity
+        # vector and position vector.
+        f = acos(dot(ev, r) / (norm(ev) * norm(r)))
+
+        if dot(r, v) < 0:
+            f = 2 * pi - f
+    
+    if deg:
+        i     = np.rad2deg(i)
+        raan  = np.rad2deg(raan)
+        arg_pe = np.rad2deg(arg_pe)
+        f     = np.rad2deg(f)
+            
+        i     = np.mod(i, 360)
+        raan  = np.mod(raan, 360)
+        arg_pe = np.mod(arg_pe, 360)
+        f     = np.mod(f, 360)
+    else:
+        i     = np.mod(i, 2*np.pi)
+        raan  = np.mod(raan, 2*np.pi)
+        arg_pe = np.mod(arg_pe, 2*np.pi)
+        f     = np.mod(f, 2*np.pi)
+    elems = np.array([a, e, i, raan, arg_pe, f], dtype=np.float64)
+
+    return elems
+
+def cart2kep_test(state, deg=True):
+    # https://space.stackexchange.com/questions/1904/how-to-programmatically-calculate-orbital-elements-using-position-velocity-vecto
+    eps  = 1e-10
+    mu   = MU
+    r    = state[0:3]
+    v    = state[3:6]
+
+    n = np.cross([0, 0, 1],r)
+
+    h=np.cross(r,v)
+    nhat=np.cross([0, 0, 1],h)
+
+    evec = ((np.linalg.norm(v)^2-mu/np.linalg.norm(r))*r-np.dot(r,v)*v)/mu
+    e = np.linalg.norm(evec)
+
+    energy = np.linalg.norm(v)^2/2-mu/np.linalg.norm(r)
+
+    if abs(e-1.0)>eps:
+        a = -mu/(2*energy)
+        p = a*(1-e^2)
+    else:
+        p = np.linalg.norm(h)^2/mu
+        a = np.inf
+
+    i = np.arccos(h[3-1]/np.linalg.norm(h))
+
+    Omega = np.arccos(n[1-1]/np.linalg.norm(n))
+
+    if n[2-1]<0:
+        Omega = 360-Omega
+
+    argp = np.arccos(np.dot(n,evec)/(np.linalg.norm(n)*e))
+
+    if e[3-1]<0:
+        argp = 360-argp
+
+    nu = np.arccos(np.dot(evec,r)/(e*np.linalg.norm(r)))
+
+    if np.dot(r,v)<0:
+        nu = 360 - nu
+
+def cart2kep_dep(state, deg=True):
     # https://web.archive.org/web/20160418175843/https://ccar.colorado.edu/asen5070/handouts/cart2kep2002.pdf
     # https://space.stackexchange.com/questions/19322/converting-orbital-elements-to-cartesian-state-vectors
 
@@ -40,7 +181,10 @@ def cart2kep(state, deg=True):
     RAAN = np.arctan2(h_bar[0],-h_bar[1])
     #8
     #beware of division by zero here
-    lat = np.arctan2(np.divide(r_vec[2],(np.sin(i))), (r_vec[0]*np.cos(RAAN) + r_vec[1]*np.sin(RAAN)))
+    if np.sin(i) == 0:
+        lat = 0
+    else:
+        lat = np.arctan2(np.divide(r_vec[2],(np.sin(i))), (r_vec[0]*np.cos(RAAN) + r_vec[1]*np.sin(RAAN)))
     #9
     p = a*(1-e**2)
     nu = np.arctan2(np.sqrt(p/mu) * np.dot(r_vec,v_vec), p-r)
@@ -56,10 +200,15 @@ def cart2kep(state, deg=True):
         RAAN  = np.rad2deg(RAAN)
         M     = np.rad2deg(M)
 
-    i     = np.mod(i, 360)
-    omega = np.mod(omega, 360)
-    RAAN  = np.mod(RAAN, 360)
-    M     = np.mod(M, 360)
+        i     = np.mod(i, 360)
+        omega = np.mod(omega, 360)
+        RAAN  = np.mod(RAAN, 360)
+        M     = np.mod(M, 360)
+    else:
+        i     = np.mod(i, 2*np.pi)
+        omega = np.mod(omega, 2*np.pi)
+        RAAN  = np.mod(RAAN, 2*np.pi)
+        M     = np.mod(M, 2*np.pi)
     state = np.array([a,e,i,omega,RAAN,M], dtype=np.float64)
     return state
 
