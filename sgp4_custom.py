@@ -80,7 +80,7 @@ class SGP4SAT:
             raise ValueError("Invalid input for elements. Must be a numpy array of orbital elements or a tuple of strings that are the TLE.")
 
 
-    def propagate_step(self, time_days:float):
+    def propagate_to(self, time_days:float):
         e, r, v = self.satellite.sgp4(time_days, 0)
         if e != 0:
             raise RuntimeError(SGP4_ERRORS[e])
