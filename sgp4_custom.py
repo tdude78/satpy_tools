@@ -81,7 +81,7 @@ class SGP4SAT:
 
 
 
-    def propagate_step(self, time_days:float, timestep_s:float):
+    def propagate_step(self, time_days:float, timestep_s:float=0.1):
         timestep_days = timestep_s/86400
 
         ts      = np.arange(0, time_days+timestep_days, timestep_days)
