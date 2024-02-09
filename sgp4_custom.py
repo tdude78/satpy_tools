@@ -10,8 +10,12 @@ from sgp4.api import SGP4_ERRORS, WGS72, Satrec
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from satpy_tools.constants import JULIAN_FIX, MU, NOW_MJD, RE, SGP4_JDOFFSET
-from satpy_tools.conversions import cart2kep
+try:
+    from satpy_tools.constants import JULIAN_FIX, MU, NOW_MJD, RE, SGP4_JDOFFSET
+    from satpy_tools.conversions import cart2kep
+except ImportError:
+    from constants import JULIAN_FIX, MU, NOW_MJD, RE, SGP4_JDOFFSET
+    from conversions import cart2kep
 
 
 class SGP4SAT:
@@ -35,7 +39,7 @@ class SGP4SAT:
         ... )
         '''
 
-        if isinstance(elements, np.ndarray):
+        if isinstance(elements, np.ndarray) or isinstance(elements, list):
             # convert elements [a, e, i, raan, argp, M] to [ecco, argpo, inclo, mo, no_kozai, nodeo]
             ecco  = elements[1]
             argpo = elements[4]
@@ -77,31 +81,19 @@ class SGP4SAT:
 
 
 
-    def propagate_to(self, time_days:float):
-        time_days += self.satellite.jdsatepoch + self.satellite.jdsatepochF
-        e, r, v    = self.satellite.sgp4(time_days, 0)
-        if e != 0:
-            raise RuntimeError(SGP4_ERRORS[e])
+    def propagate_step(self, time_days:float, timestep_s:float):
+        timestep_days = timestep_s/86400
+
+        ts      = np.arange(0, time_days+timestep_days, timestep_days)
+        ts     += self.satellite.jdsatepoch + self.satellite.jdsatepochF
+        e, r, v = self.satellite.sgp4_array(ts, np.zeros(ts.shape))
+        if np.any(e != 0):
+            raise RuntimeError(SGP4_ERRORS[e[e != 0]])
         state = np.concatenate((r, v))
         return state
     
-
-    def propagate_step(self, time_days:float, timestep_s:float):
-        timestep_days = timestep_s/86400
-        ts            = np.arange(0, time_days+timestep_days, timestep_days)
-        states        = np.zeros((len(ts), 7))
-        mjd           = self.jd - JULIAN_FIX
-        for i, t in enumerate(ts):
-            try:
-                state = self.propagate_to(t)
-            except RuntimeError as e:
-                print(e)
-                states = states[:i,:]
-                break
-            t = np.array([mjd + t])
-            states[i,:] = np.concatenate((t, state))
-        return states
-    
+    # final note
+    # working to get rid of step, combine propagate_to and propagate_step maybe?
 
     def propagate_step_update(self, time_days:float, timestep_s:float):
         states = self.propagate_step(time_days, timestep_s)
@@ -120,24 +112,17 @@ if __name__ == "__main__":
     import timeit
 
     elements  = [6738.0,  0.0001217,  51.6398, 179.7719, 23.6641,  73.5536]
-    days_prop = 180/60/24
 
     sat = SGP4SAT(elements)
 
+    time_days = 180/60/24
+    timestep_s = 60
+    timestep_days = timestep_s/86400
+
     start = timeit.default_timer()
-    states = sat.propagate_step(days_prop, 1)
+    states = sat.propagate_step(time_days, timestep_s)
     end = timeit.default_timer()
     print("Time: ", end-start, " seconds")
-
-    rs = states[:,:3]
-    rs = np.linalg.norm(rs, axis=1)
-
-    rs = rs - RE
-    rs = rs[::100]
-
-    plt.figure()
-    plt.plot(rs)
-    plt.show()
 
 
     # print("Time: ", end-start, " seconds")

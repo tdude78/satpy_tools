@@ -7,7 +7,10 @@ import juliandate
 import numpy as np
 from scipy.special import jv
 
-from satpy_tools.constants import JULIAN_FIX, MU
+try:
+    from satpy_tools.constants import JULIAN_FIX, MU
+except ImportError:
+    from constants import JULIAN_FIX, MU
 
 from collections import namedtuple
 from contextlib import contextmanager
