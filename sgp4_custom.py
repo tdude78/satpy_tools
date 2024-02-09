@@ -81,6 +81,7 @@ class SGP4SAT:
 
 
     def propagate_to(self, time_days:float):
+        time_days += self.satellite.jdsatepoch + self.satellite.jdsatepochF
         e, r, v = self.satellite.sgp4(time_days, 0)
         if e != 0:
             raise RuntimeError(SGP4_ERRORS[e])
@@ -101,7 +102,7 @@ class SGP4SAT:
     # final note
     # working to get rid of step, combine propagate_to and propagate_step maybe?
 
-    def propagate_step_update(self, time_days:float, timestep_s:float):
+    def propagate_step_update_DEP(self, time_days:float, timestep_s:float):
         states = self.propagate_step(time_days, timestep_s)
 
         mjd_f          = self.jd + time_days - JULIAN_FIX
