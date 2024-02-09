@@ -89,8 +89,8 @@ class SGP4SAT:
         e, r, v = self.satellite.sgp4_array(ts, np.zeros(ts.shape))
         if np.any(e != 0):
             raise RuntimeError(SGP4_ERRORS[e[e != 0]])
-        state = np.concatenate((r, v))
-        return state
+        states = np.concatenate((r, v), axis=1)
+        return states
     
     # final note
     # working to get rid of step, combine propagate_to and propagate_step maybe?
