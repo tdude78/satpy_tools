@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 
 import juliandate
 import numpy as np
@@ -6,18 +7,17 @@ import ray
 from ray.exceptions import RaySystemError
 
 if not ray.is_initialized():
-	ray.init()
+	os.system("ray start --head")
 
 def get_mem_func():
-	# ray.init()
-	MEMORY      = ray.available_resources()['memory']
+	MEMORY = ray.available_resources()['memory']
 	try:
-		CPUS   = ray.available_resources()['CPU']
+		CPUS = ray.available_resources()['CPU']
 		MEM_PER_WORKER = (MEMORY / CPUS) * 0.8
 	except KeyError:
 		# get number of cores
 		import multiprocessing
-		CPUS   = multiprocessing.cpu_count()
+		CPUS = multiprocessing.cpu_count()
 		MEM_PER_WORKER = (MEMORY / CPUS) * 0.8
 	MEMORY = int(MEMORY)
 	CPUS   = int(CPUS)
