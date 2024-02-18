@@ -6,10 +6,7 @@ import numpy as np
 import ray
 from ray.exceptions import RaySystemError
 
-if not ray.is_initialized():
-	print("try in the command line typing 'ray start --head' so ray doesn't initialize on \
-	   every run of the script.")
-	ray.init()
+ray.init()
 
 def get_mem_func():
 	MEMORY = ray.available_resources()['memory']
