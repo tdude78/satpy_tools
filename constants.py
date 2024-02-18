@@ -8,6 +8,7 @@ from ray.exceptions import RaySystemError
 
 if not ray.is_initialized():
 	os.system("ray start --head")
+	ray.init()
 
 def get_mem_func():
 	MEMORY = ray.available_resources()['memory']
