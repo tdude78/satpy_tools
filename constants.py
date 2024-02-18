@@ -7,7 +7,8 @@ import ray
 from ray.exceptions import RaySystemError
 
 if not ray.is_initialized():
-	os.system("ray start --head")
+	print("try in the command line typing 'ray start --head' so ray doesn't initialize on \
+	   every run of the script.")
 	ray.init()
 
 def get_mem_func():
