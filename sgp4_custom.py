@@ -83,7 +83,7 @@ class SGP4SAT:
     def propagate_to(self, time_days:float):
         time_days += self.satellite.jdsatepoch + self.satellite.jdsatepochF
         e, r, v = self.satellite.sgp4(time_days, 0)
-        if e == 0:
+        if e != 0:
             raise RuntimeError(SGP4_ERRORS[e])
         return np.concatenate((r, v), axis=0)
     
@@ -94,7 +94,7 @@ class SGP4SAT:
         ts      = np.arange(0, time_days+timestep_days, timestep_days)
         ts     += self.satellite.jdsatepoch + self.satellite.jdsatepochF
         e, r, v = self.satellite.sgp4_array(ts, np.zeros(ts.shape))
-        if np.any(e == 0):
+        if np.any(e != 0):
             raise RuntimeError(SGP4_ERRORS[e[e != 0]])
         states = np.concatenate((r, v), axis=1)
         return states
