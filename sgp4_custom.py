@@ -3,7 +3,6 @@ import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
-from astropy.constants import G, M_earth, R_earth
 from scipy.special import jv
 from sgp4 import exporter
 from sgp4.api import SGP4_ERRORS, WGS72, Satrec
