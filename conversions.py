@@ -8,9 +8,9 @@ import numpy as np
 from scipy.special import jv
 
 try:
-    from satpy_tools.constants import JULIAN_FIX, MU
+    from satpy_tools.constants import JULIAN_FIX, MU, DU, TU, DU_TU
 except ImportError:
-    from constants import JULIAN_FIX, MU
+    from constants import JULIAN_FIX, MU, DU, TU, DU_TU
 
 from collections import namedtuple
 from contextlib import contextmanager
@@ -25,8 +25,6 @@ from scipy.constants import pi
 
 
 def cart2kep(state, deg=True):
-    # https://github.com/RazerM/orbital/blob/0.7.0/orbital/utilities.py#L252
-
     r = state[0:3]
     v = state[3:6]
 
@@ -41,53 +39,32 @@ def cart2kep(state, deg=True):
     e = norm(ev)
 
     SMALL_NUMBER = 1e-15
-
-    # Inclination is the angle between the angular
-    # momentum vector and its z component.
     i = acos(h[2] / norm(h))
 
     if abs(i - 0) < SMALL_NUMBER:
-        # For non-inclined orbits, raan is undefined;
-        # set to zero by convention
         raan = 0
         if abs(e - 0) < SMALL_NUMBER:
-            # For circular orbits, place periapsis
-            # at ascending node by convention
             arg_pe = 0
         else:
-            # Argument of periapsis is the angle between
-            # eccentricity vector and its x component.
             arg_pe = acos(ev[0] / norm(ev))
     else:
-        # Right ascension of ascending node is the angle
-        # between the node vector and its x component.
         raan = acos(n[0] / norm(n))
         if n[1] < 0:
             raan = 2 * pi - raan
-
-        # Argument of periapsis is angle between
-        # node and eccentricity vectors.
         arg_pe = acos(dot(n, ev) / (norm(n) * norm(ev)))
 
     if abs(e - 0) < SMALL_NUMBER:
         if abs(i - 0) < SMALL_NUMBER:
-            # True anomaly is angle between position
-            # vector and its x component.
             nu = acos(r[0] / norm(r))
             if v[0] > 0:
                 nu = 2 * pi - nu
         else:
-            # True anomaly is angle between node
-            # vector and position vector.
             nu = acos(dot(n, r) / (norm(n) * norm(r)))
             if dot(n, v) > 0:
                 nu = 2 * pi - nu
     else:
         if ev[2] < 0:
             arg_pe = 2 * pi - arg_pe
-
-        # True anomaly is angle between eccentricity
-        # vector and position vector.
         nu = acos(dot(ev, r) / (norm(ev) * norm(r)))
 
         if dot(r, v) < 0:
@@ -352,3 +329,4 @@ def kep2cart_dep(state, deg=True):
 
     state = np.array([X,Y,Z,V_X,V_Y,V_Z], dtype=np.float64)
     return state
+
