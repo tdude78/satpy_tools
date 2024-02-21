@@ -74,42 +74,42 @@ def cart2kep(state, deg=True):
         if abs(i - 0) < SMALL_NUMBER:
             # True anomaly is angle between position
             # vector and its x component.
-            f = acos(r[0] / norm(r))
+            nu = acos(r[0] / norm(r))
             if v[0] > 0:
-                f = 2 * pi - f
+                nu = 2 * pi - nu
         else:
             # True anomaly is angle between node
             # vector and position vector.
-            f = acos(dot(n, r) / (norm(n) * norm(r)))
+            nu = acos(dot(n, r) / (norm(n) * norm(r)))
             if dot(n, v) > 0:
-                f = 2 * pi - f
+                nu = 2 * pi - nu
     else:
         if ev[2] < 0:
             arg_pe = 2 * pi - arg_pe
 
         # True anomaly is angle between eccentricity
         # vector and position vector.
-        f = acos(dot(ev, r) / (norm(ev) * norm(r)))
+        nu = acos(dot(ev, r) / (norm(ev) * norm(r)))
 
         if dot(r, v) < 0:
-            f = 2 * pi - f
+            nu = 2 * pi - nu
     
     if deg:
         i     = np.rad2deg(i)
         raan  = np.rad2deg(raan)
         arg_pe = np.rad2deg(arg_pe)
-        f     = np.rad2deg(f)
+        nu     = np.rad2deg(nu)
             
         i     = np.mod(i, 360)
         raan  = np.mod(raan, 360)
         arg_pe = np.mod(arg_pe, 360)
-        f     = np.mod(f, 360)
+        nu     = np.mod(nu, 360)
     else:
         i     = np.mod(i, 2*np.pi)
         raan  = np.mod(raan, 2*np.pi)
         arg_pe = np.mod(arg_pe, 2*np.pi)
-        f     = np.mod(f, 2*np.pi)
-    elems = np.array([a, e, i, raan, arg_pe, f], dtype=np.float64)
+        nu     = np.mod(nu, 2*np.pi)
+    elems = np.array([a, e, i, raan, arg_pe, nu], dtype=np.float64)
 
     return elems
 
