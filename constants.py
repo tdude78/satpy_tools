@@ -35,6 +35,10 @@ RE_po = 6356.752
 RE_eq = 6378.137
 g  = lambda h: MU/(RE + h)**2
 
+DU = 6378.145
+TU = 806.8118744
+DU_TU = DU/TU
+
 
 MIN_V = np.sqrt(MU/(RE+250))
 MAX_V = np.sqrt(MU/(35786))
