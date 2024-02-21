@@ -26,7 +26,6 @@ from scipy.constants import pi
 
 def cart2kep(state, deg=True):
     # https://github.com/RazerM/orbital/blob/0.7.0/orbital/utilities.py#L252
-    mu    = MU
 
     r = state[0:3]
     v = state[3:6]
@@ -34,11 +33,11 @@ def cart2kep(state, deg=True):
     h = np.cross(r, v)
     n = np.cross([0, 0, 1], h)
 
-    ev = 1 / mu * ((norm(v) ** 2 - mu / norm(r)) * r - dot(r, v) * v)
+    ev = 1 / MU * ((norm(v) ** 2 - MU / norm(r)) * r - dot(r, v) * v)
 
-    E = norm(v) ** 2 / 2 - mu / norm(r)
+    E = norm(v) ** 2 / 2 - MU / norm(r)
 
-    a = -mu / (2 * E)
+    a = -MU / (2 * E)
     e = norm(ev)
 
     SMALL_NUMBER = 1e-15
