@@ -6,7 +6,10 @@ import numpy as np
 import ray
 from ray.exceptions import RaySystemError
 
-ray.init()
+try:
+	ray.init()
+except:
+	pass
 
 def get_mem_func():
 	MEMORY = ray.available_resources()['memory']
