@@ -51,8 +51,9 @@ def cart2kep(state, deg=True):
         raan = acos(n[0] / norm(n))
         if n[1] < 0:
             raan = 2 * pi - raan
-        arg_pe = acos(dot(n, ev) / (norm(n) * norm(ev)))
-
+        arg_pe = acos(np.round(dot(n, ev) / (norm(n) * norm(ev)), 12))
+        if np.isnan(arg_pe):
+            arg_pe = 0
     if abs(e - 0) < SMALL_NUMBER:
         if abs(i - 0) < SMALL_NUMBER:
             nu = acos(r[0] / norm(r))
