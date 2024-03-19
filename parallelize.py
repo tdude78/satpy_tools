@@ -11,7 +11,7 @@ def smart_parallelize(func, n_vars2parallelize=1):
     '''FIRST ARG MUST BE ARG TO BE PARALLELIZED'''
 
     def wrap(**kwargs): 
-        @ray.remote
+        @ray.remote(memory=MEM_PER_WORKER)
         def get_results(**kwargs):
             try:
                 args_names = ray.get(args_names_put)
