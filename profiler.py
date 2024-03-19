@@ -4,7 +4,7 @@ import os
 
 def profiler(function, *args, **kwargs):
     with cProfile.Profile() as pr:
-        function(*args, **kwargs)
+        returners = function(*args, **kwargs)
     stats = pstats.Stats(pr)
     stats.sort_stats(pstats.SortKey.TIME)
     stats.print_stats()
@@ -13,5 +13,5 @@ def profiler(function, *args, **kwargs):
 
     os.remove('profile.prof')
 
-    return stats
+    return returners
 
