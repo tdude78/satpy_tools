@@ -65,7 +65,7 @@ class SGP4SAT:
                 MJD = NOW_MJD
 
             self.jd = MJD + JULIAN_FIX
-            jd_sgp4 = MJD + JULIAN_FIX 
+            jd_sgp4 = MJD + JULIAN_FIX - SGP4_JDOFFSET
 
             self.satellite = Satrec()
             self.satellite.sgp4init(
@@ -117,24 +117,13 @@ if __name__ == "__main__":
     import sys
     import timeit
 
-    # with open('satpy_tools/equisat.tle', 'r') as f:
-    #     lines = f.readlines()
+    with open('satpy_tools/equisat.tle', 'r') as f:
+        lines = f.readlines()
 
-    # line1 = lines[0]
-    # line2 = lines[1]
+    line1 = lines[0]
+    line2 = lines[1]
 
-    # elements = (line1, line2)
-
-    # sat = SGP4SAT(elements)
-
-    # time_days = 180/60/24
-    # timestep_s = 60
-    # timestep_days = timestep_s/86400
-
-    # start = timeit.default_timer()
-    # states = sat.propagate_step_update_DEP(time_days, timestep_s)
-
-    elements  = [6738.0,  0.0001217,  51.6398, 179.7719, 23.6641,  73.5536]
+    elements = (line1, line2)
 
     sat = SGP4SAT(elements)
 
@@ -143,10 +132,21 @@ if __name__ == "__main__":
     timestep_days = timestep_s/86400
 
     start = timeit.default_timer()
-    states = sat.propagate_step(time_days, timestep_s)
-    end = timeit.default_timer()
-    print("Time: ", end-start, " seconds")
+    states = sat.propagate_step_update_DEP(time_days, timestep_s)
 
+    # elements  = [6738.0,  0.0001217,  51.6398, 179.7719, 23.6641,  73.5536]
 
+    # sat = SGP4SAT(elements)
+
+    # time_days = 180/60/24
+    # timestep_s = 60
+    # timestep_days = timestep_s/86400
+
+    # start = timeit.default_timer()
+    # states = sat.propagate_step(time_days, timestep_s)
+    # end = timeit.default_timer()
     # print("Time: ", end-start, " seconds")
+
+
+    # # print("Time: ", end-start, " seconds")
 
