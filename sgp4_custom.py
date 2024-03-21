@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.special import jv
 from sgp4 import exporter
-from sgp4.api import SGP4_ERRORS, WGS72, Satrec
+from sgp4.api import SGP4_ERRORS, WGS72, Satrec, jday
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -65,7 +65,7 @@ class SGP4SAT:
                 MJD = NOW_MJD
 
             self.jd = MJD + JULIAN_FIX
-            jd_sgp4 = MJD + JULIAN_FIX - SGP4_JDOFFSET
+            jd_sgp4 = MJD + JULIAN_FIX 
 
             self.satellite = Satrec()
             self.satellite.sgp4init(
@@ -74,7 +74,7 @@ class SGP4SAT:
         # check if is tuple of strings
         elif isinstance(elements, tuple):
             self.satellite = Satrec.twoline2rv(*elements)
-            self.jd  = self.satellite.jdsatepoch + self.satellite.jdsatepochF
+            self.jd        = self.satellite.jdsatepoch + self.satellite.jdsatepochF
         else:
             raise ValueError("Invalid input for elements. Must be a numpy array of orbital elements or a tuple of strings that are the TLE.")
 
@@ -116,6 +116,23 @@ if __name__ == "__main__":
     # make this take command line arguments
     import sys
     import timeit
+
+    # with open('satpy_tools/equisat.tle', 'r') as f:
+    #     lines = f.readlines()
+
+    # line1 = lines[0]
+    # line2 = lines[1]
+
+    # elements = (line1, line2)
+
+    # sat = SGP4SAT(elements)
+
+    # time_days = 180/60/24
+    # timestep_s = 60
+    # timestep_days = timestep_s/86400
+
+    # start = timeit.default_timer()
+    # states = sat.propagate_step_update_DEP(time_days, timestep_s)
 
     elements  = [6738.0,  0.0001217,  51.6398, 179.7719, 23.6641,  73.5536]
 
