@@ -40,26 +40,23 @@ class SGP4SAT:
 
         if isinstance(elements, np.ndarray) or isinstance(elements, list):
             # convert elements [a, e, i, raan, argp, M] to [ecco, argpo, inclo, mo, no_kozai, nodeo]
-            ecco  = elements[1]
+            e     = elements[1]
             argpo = elements[4]
-            inclo = elements[2]
-            mo    = elements[5]
-            no_kozai = np.sqrt(MU/elements[0]**3)*60
-            nodeo = elements[3]
+            i     = elements[2]
+            M     = elements[5]
+            n_min = np.sqrt(MU/elements[0]**3)*60
+            raan  = elements[3]
             
             try:
                 B_star = elements[6]
             except IndexError:
                 B_star = 0
-
-            elems    = np.array([ecco, argpo, inclo, mo, no_kozai, nodeo])
-            elements = elems
             if deg:
-                elements[1] = np.deg2rad(elements[1])
-                elements[2] = np.deg2rad(elements[2])
-                elements[3] = np.deg2rad(elements[3])
-                # elements[4] = np.deg2rad(elements[4])
-                elements[5] = np.deg2rad(elements[5])
+                i         = np.deg2rad(i)
+                argpo     = np.deg2rad(argpo)
+                raan      = np.deg2rad(raan)
+                M         = np.deg2rad(M)
+            elems    = np.array([e, argpo, i, M, n_min, raan])
 
             if MJD is None:
                 MJD = NOW_MJD
@@ -69,7 +66,7 @@ class SGP4SAT:
 
             self.satellite = Satrec()
             self.satellite.sgp4init(
-                WGS72, 'i', 1, jd_sgp4, B_star, 0, 0, *elements
+                WGS72, 'i', 1, jd_sgp4, B_star, 0, 0, *elems
             )
         # check if is tuple of strings
         elif isinstance(elements, tuple):

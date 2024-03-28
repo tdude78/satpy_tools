@@ -27,6 +27,52 @@ from scipy.constants import pi
 def cart2kep(state, deg=True):
     r = state[0:3]
     v = state[3:6]
+    h = np.cross(r, v)
+
+    r_norm = norm(r)
+    v_norm = norm(v)
+    h_norm = norm(h)
+
+    energy = v_norm**2/2 - MU/r_norm
+
+    a = -MU/(2*energy)
+
+    e = np.sqrt(1 - h_norm**2/(a*MU))
+
+    i = np.arccos(h[2]/h_norm)
+
+    raan = np.arctan2(h[0], -h[1])
+
+    arglat = np.arctan2(r[2]/np.sin(i), r[0]*np.cos(raan) + r[1]*np.sin(raan))
+
+    nu = np.arccos((a*(1 - e**2) - r_norm)/(e*r_norm))
+    rdotv = np.dot(r, v)
+    if rdotv > 0:
+        nu = np.mod(nu, pi)
+    
+    argper = arglat - nu
+
+    E = 2*np.arctan(np.sqrt((1-e)/(1+e))*np.tan(nu/2))
+    M = E - e*np.sin(E)
+
+    i      = np.mod(i, 2*pi)
+    raan   = np.mod(raan, 2*pi)
+    arglat = np.mod(arglat, 2*pi)
+    argper = np.mod(argper, 2*pi)
+    M      = np.mod(M, 2*pi)
+
+    if deg:
+        i      = np.rad2deg(i)
+        raan   = np.rad2deg(raan)
+        arglat = np.rad2deg(arglat)
+        argper = np.rad2deg(argper)
+        M      = np.rad2deg(M)
+
+    return np.array([a, e, i, raan, argper, M])
+
+def cart2kep_DEP(state, deg=True):
+    r = state[0:3]
+    v = state[3:6]
 
     h = np.cross(r, v)
     n = np.cross([0, 0, 1], h)
