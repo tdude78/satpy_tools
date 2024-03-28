@@ -25,6 +25,7 @@ from scipy.constants import pi
 
 
 def cart2kep(state, deg=True):
+    # https://space.stackexchange.com/questions/19322/converting-orbital-elements-to-cartesian-state-vectors
     r = state[0:3]
     v = state[3:6]
     h = np.cross(r, v)
@@ -69,72 +70,6 @@ def cart2kep(state, deg=True):
         M      = np.rad2deg(M)
 
     return np.array([a, e, i, raan, argper, M])
-
-def cart2kep_DEP(state, deg=True):
-    r = state[0:3]
-    v = state[3:6]
-
-    h = np.cross(r, v)
-    n = np.cross([0, 0, 1], h)
-
-    ev = 1 / MU * ((norm(v) ** 2 - MU / norm(r)) * r - dot(r, v) * v)
-
-    E = norm(v) ** 2 / 2 - MU / norm(r)
-
-    a = -MU / (2 * E)
-    e = norm(ev)
-
-    SMALL_NUMBER = 1e-15
-    i = acos(h[2] / norm(h))
-
-    if abs(i - 0) < SMALL_NUMBER:
-        raan = 0
-        if abs(e - 0) < SMALL_NUMBER:
-            arg_pe = 0
-        else:
-            arg_pe = acos(ev[0] / norm(ev))
-    else:
-        raan = acos(n[0] / norm(n))
-        if n[1] < 0:
-            raan = 2 * pi - raan
-        arg_pe = acos(np.round(dot(n, ev) / (norm(n) * norm(ev)), 12))
-        if np.isnan(arg_pe):
-            arg_pe = 0
-    if abs(e - 0) < SMALL_NUMBER:
-        if abs(i - 0) < SMALL_NUMBER:
-            nu = acos(r[0] / norm(r))
-            if v[0] > 0:
-                nu = 2 * pi - nu
-        else:
-            nu = acos(dot(n, r) / (norm(n) * norm(r)))
-            if dot(n, v) > 0:
-                nu = 2 * pi - nu
-    else:
-        if ev[2] < 0:
-            arg_pe = 2 * pi - arg_pe
-        nu = acos(dot(ev, r) / (norm(ev) * norm(r)))
-
-        if dot(r, v) < 0:
-            nu = 2 * pi - nu
-    
-    if deg:
-        i     = np.rad2deg(i)
-        raan  = np.rad2deg(raan)
-        arg_pe = np.rad2deg(arg_pe)
-        nu     = np.rad2deg(nu)
-            
-        i     = np.mod(i, 360)
-        raan  = np.mod(raan, 360)
-        arg_pe = np.mod(arg_pe, 360)
-        nu     = np.mod(nu, 360)
-    else:
-        i     = np.mod(i, 2*np.pi)
-        raan  = np.mod(raan, 2*np.pi)
-        arg_pe = np.mod(arg_pe, 2*np.pi)
-        nu     = np.mod(nu, 2*np.pi)
-    elems = np.array([a, e, i, raan, arg_pe, nu], dtype=np.float64)
-
-    return elems
 
 
 def kep2cart(state, deg=True):
@@ -376,4 +311,68 @@ def kep2cart_dep(state, deg=True):
 
     state = np.array([X,Y,Z,V_X,V_Y,V_Z], dtype=np.float64)
     return state
+def cart2kep_DEP(state, deg=True):
+    r = state[0:3]
+    v = state[3:6]
 
+    h = np.cross(r, v)
+    n = np.cross([0, 0, 1], h)
+
+    ev = 1 / MU * ((norm(v) ** 2 - MU / norm(r)) * r - dot(r, v) * v)
+
+    E = norm(v) ** 2 / 2 - MU / norm(r)
+
+    a = -MU / (2 * E)
+    e = norm(ev)
+
+    SMALL_NUMBER = 1e-15
+    i = acos(h[2] / norm(h))
+
+    if abs(i - 0) < SMALL_NUMBER:
+        raan = 0
+        if abs(e - 0) < SMALL_NUMBER:
+            arg_pe = 0
+        else:
+            arg_pe = acos(ev[0] / norm(ev))
+    else:
+        raan = acos(n[0] / norm(n))
+        if n[1] < 0:
+            raan = 2 * pi - raan
+        arg_pe = acos(np.round(dot(n, ev) / (norm(n) * norm(ev)), 12))
+        if np.isnan(arg_pe):
+            arg_pe = 0
+    if abs(e - 0) < SMALL_NUMBER:
+        if abs(i - 0) < SMALL_NUMBER:
+            nu = acos(r[0] / norm(r))
+            if v[0] > 0:
+                nu = 2 * pi - nu
+        else:
+            nu = acos(dot(n, r) / (norm(n) * norm(r)))
+            if dot(n, v) > 0:
+                nu = 2 * pi - nu
+    else:
+        if ev[2] < 0:
+            arg_pe = 2 * pi - arg_pe
+        nu = acos(dot(ev, r) / (norm(ev) * norm(r)))
+
+        if dot(r, v) < 0:
+            nu = 2 * pi - nu
+    
+    if deg:
+        i     = np.rad2deg(i)
+        raan  = np.rad2deg(raan)
+        arg_pe = np.rad2deg(arg_pe)
+        nu     = np.rad2deg(nu)
+            
+        i     = np.mod(i, 360)
+        raan  = np.mod(raan, 360)
+        arg_pe = np.mod(arg_pe, 360)
+        nu     = np.mod(nu, 360)
+    else:
+        i     = np.mod(i, 2*np.pi)
+        raan  = np.mod(raan, 2*np.pi)
+        arg_pe = np.mod(arg_pe, 2*np.pi)
+        nu     = np.mod(nu, 2*np.pi)
+    elems = np.array([a, e, i, raan, arg_pe, nu], dtype=np.float64)
+
+    return elems
